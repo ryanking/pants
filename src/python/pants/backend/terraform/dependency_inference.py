@@ -34,13 +34,14 @@ class TerraformHcl2Parser(PythonToolRequirementsBase):
     options_scope = "terraform-hcl2-parser"
     help = "Used to parse Terraform modules to infer their dependencies."
 
-    default_version = "python-hcl2==3.0.1"
+    default_version = "python-hcl2==3.0.3"
 
     register_interpreter_constraints = True
     default_interpreter_constraints = ["CPython>=3.6"]
 
     register_lockfile = True
-    default_lockfile_resource = ("pants.backend.terraform", "hcl2_lockfile.txt")
+    default_lockfile_resource = (
+        "pants.backend.terraform", "hcl2_lockfile.txt")
     default_lockfile_path = "src/python/pants/backend/terraform/hcl2_lockfile.txt"
     default_lockfile_url = git_url(default_lockfile_path)
 
@@ -63,9 +64,11 @@ class ParserSetup:
 
 @rule
 async def setup_parser(hcl2_parser: TerraformHcl2Parser) -> ParserSetup:
-    parser_script_content = pkgutil.get_data("pants.backend.terraform", "hcl2_parser.py")
+    parser_script_content = pkgutil.get_data(
+        "pants.backend.terraform", "hcl2_parser.py")
     if not parser_script_content:
-        raise ValueError("Unable to find source to hcl2_parser.py wrapper script.")
+        raise ValueError(
+            "Unable to find source to hcl2_parser.py wrapper script.")
 
     parser_content = FileContent(
         path="__pants_tf_parser.py",
@@ -135,11 +138,13 @@ async def infer_terraform_module_dependencies(
             paths=tuple(paths),
         ),
     )
-    candidate_spec_paths = [line for line in result.stdout.decode("utf-8").split("\n") if line]
+    candidate_spec_paths = [
+        line for line in result.stdout.decode("utf-8").split("\n") if line]
 
     # For each path, see if there is a `terraform_module` target at the specified spec_path.
     candidate_targets = await Get(
-        Targets, AddressSpecs([MaybeEmptySiblingAddresses(path) for path in candidate_spec_paths])
+        Targets, AddressSpecs([MaybeEmptySiblingAddresses(path)
+                              for path in candidate_spec_paths])
     )
     # TODO: Need to either implement the standard ambiguous dependency logic or ban >1 terraform_module
     # per directory.
@@ -153,6 +158,8 @@ def rules():
     return [
         *collect_rules(),
         *lockfile.rules(),
-        UnionRule(InferDependenciesRequest, InferTerraformModuleDependenciesRequest),
-        UnionRule(GenerateToolLockfileSentinel, TerraformHcl2ParserLockfileSentinel),
+        UnionRule(InferDependenciesRequest,
+                  InferTerraformModuleDependenciesRequest),
+        UnionRule(GenerateToolLockfileSentinel,
+                  TerraformHcl2ParserLockfileSentinel),
     ]
